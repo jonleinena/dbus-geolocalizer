@@ -1,9 +1,6 @@
 import https from 'https';
 import type { Stop } from '../types.js';
 
-// Debug mode - disable in production for performance
-const DEBUG = process.env.NODE_ENV !== 'production';
-
 // Custom HTTPS agent to bypass SSL certificate issues
 const httpsAgent = new https.Agent({
   rejectUnauthorized: false,
@@ -23,7 +20,7 @@ export async function fetchRouteGeometry(
   // Check cache first
   const cached = routeCache.get(lineNum);
   if (cached) {
-    if (DEBUG) console.log(`[Routing] Using cached route for line ${lineNum}`);
+    console.log(`[Routing] Using cached route for line ${lineNum}`);
     return cached;
   }
 
@@ -31,7 +28,7 @@ export async function fetchRouteGeometry(
     return stops.map(s => [s.lng, s.lat]);
   }
 
-  if (DEBUG) console.log(`[Routing] Fetching OSRM route for line ${lineNum} (${stops.length} stops)`);
+  console.log(`[Routing] Fetching OSRM route for line ${lineNum} (${stops.length} stops)`);
 
   try {
     // Build coordinates string for OSRM
@@ -67,7 +64,7 @@ export async function fetchRouteGeometry(
     }
 
     const coordinates = data.routes[0].geometry.coordinates;
-    if (DEBUG) console.log(`[Routing] Got ${coordinates.length} points for line ${lineNum}`);
+    console.log(`[Routing] Got ${coordinates.length} points for line ${lineNum}`);
 
     // Cache the result
     routeCache.set(lineNum, coordinates);
