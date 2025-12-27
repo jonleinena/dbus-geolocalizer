@@ -1,5 +1,8 @@
 import type { Stop, Arrival, BusPosition, StopEta } from '../types.js';
 
+// Debug mode - disable in production for performance
+const DEBUG = process.env.NODE_ENV !== 'production';
+
 /**
  * Estimate bus positions based on arrival times at stops
  * 
@@ -26,7 +29,7 @@ export function estimateBusPositions(
         }
     }
 
-    console.log(`[Estimator] Line ${lineNum}: ${stops.length} stops, ${arrivalMap.size} with ETAs`);
+    if (DEBUG) console.log(`[Estimator] Line ${lineNum}: ${stops.length} stops, ${arrivalMap.size} with ETAs`);
 
     // If no arrivals, return empty
     if (arrivalMap.size === 0) {
@@ -37,7 +40,7 @@ export function estimateBusPositions(
     // The direction info from the API tells us which way the bus is going
     const allBuses = detectBusesInDirection(lineNum, stops, arrivalMap, 'all');
 
-    console.log(`[Estimator] Found ${allBuses.length} buses for line ${lineNum}`);
+    if (DEBUG) console.log(`[Estimator] Found ${allBuses.length} buses for line ${lineNum}`);
 
     buses.push(...allBuses);
 
@@ -86,6 +89,22 @@ function detectBusesInDirection(
             const lat = curr.stop.lat + (prevStop.lat - curr.stop.lat) * etaRatio;
             const lng = curr.stop.lng + (prevStop.lng - curr.stop.lng) * etaRatio;
 
+            // Only include stops AHEAD of this bus (from stopIndex onward)
+            // Also calculate relative ETA from this bus's perspective
+            const stopsAhead: StopEta[] = [];
+            for (let j = stopIndex; j < stops.length; j++) {
+                const s = stops[j];
+                const arrival = arrivalMap.get(s.paradaId);
+                stopsAhead.push({
+                    markerId: s.markerId,
+                    paradaId: s.paradaId,
+                    name: s.titleEs,
+                    lat: s.lat,
+                    lng: s.lng,
+                    etaMinutes: arrival?.etaMinutes ?? null,
+                });
+            }
+
             buses.push({
                 id: `${lineNum}-${direction}-${busCount++}`,
                 lineNum,
@@ -95,14 +114,7 @@ function detectBusesInDirection(
                 nextStopId: curr.stop.markerId,
                 nextStopName: curr.stop.titleEs,
                 etaToNextStop: curr.eta,
-                stopsWithEta: stops.map(s => ({
-                    markerId: s.markerId,
-                    paradaId: s.paradaId,
-                    name: s.titleEs,
-                    lat: s.lat,
-                    lng: s.lng,
-                    etaMinutes: arrivalMap.get(s.paradaId)?.etaMinutes ?? null,
-                })),
+                stopsWithEta: stopsAhead,
             });
         }
     }
