@@ -9,59 +9,16 @@ const httpsAgent = new https.Agent({
 });
 
 // Helper to fetch with SSL bypass
-async function fetchWithSSLBypass(url: string, options: RequestInit = {}): Promise<Response> {
+async function fetchWithSSLBypass(url: string, options: Record<string, unknown> = {}): Promise<Response> {
   // Use node-fetch style with agent
   const { default: nodeFetch } = await import('node-fetch');
   return nodeFetch(url, {
     ...options,
     agent: httpsAgent,
-  }) as unknown as Response;
+  } as Parameters<typeof nodeFetch>[1]) as unknown as Response;
 }
 
-// Known line-to-mapId mappings (discovered from the website)
-// Map ID is used to fetch markers XML
-const LINE_MAP_IDS: Record<string, number> = {
-  '05': 5,
-  '08': 8,
-  '09': 9,
-  '13': 13,
-  '14': 14,
-  '16': 16,
-  '17': 17,
-  '18': 18,
-  '19': 4, // Line 19 uses map 4
-  '21': 21,
-  '23': 23,
-  '24': 24,
-  '25': 25,
-  '26': 26,
-  '27': 27,
-  '28': 28,
-  '29': 29,
-  '31': 31,
-  '32': 32,
-  '33': 19, // Line 33 uses map 19
-  '35': 35,
-  '36': 36,
-  '37': 37,
-  '38': 38,
-  '39': 39,
-  '40': 40,
-  '41': 41,
-  '42': 42,
-  '43': 43,
-  '45': 45,
-  '46': 46,
-  'B1': 101,
-  'B2': 102,
-  'B3': 103,
-  'B4': 104,
-  'B6': 106,
-  'B7': 107,
-  'B8': 108,
-  'B9': 109,
-  'B10': 110,
-};
+// mapId is now scraped dynamically from line pages
 
 // All available bus lines
 export const BUS_LINES: BusLine[] = [
@@ -109,11 +66,6 @@ export const BUS_LINES: BusLine[] = [
 
 export function getLineByNum(lineNum: string): BusLine | undefined {
   return BUS_LINES.find(l => l.lineNum === lineNum);
-}
-
-export function getMapIdForLine(lineNum: string): number | undefined {
-  const line = getLineByNum(lineNum);
-  return line?.mapId;
 }
 
 /**

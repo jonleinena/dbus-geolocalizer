@@ -26,22 +26,20 @@ export function estimateBusPositions(
         }
     }
 
+    console.log(`[Estimator] Line ${lineNum}: ${stops.length} stops, ${arrivalMap.size} with ETAs`);
+
     // If no arrivals, return empty
     if (arrivalMap.size === 0) {
         return [];
     }
 
-    // Try to detect route direction split
-    // For now, assume stops are ordered: outbound then return
-    const midpoint = Math.floor(stops.length / 2);
-    const outboundStops = stops.slice(0, midpoint);
-    const returnStops = stops.slice(midpoint);
+    // Process ALL stops together (not split) to find local minima
+    // The direction info from the API tells us which way the bus is going
+    const allBuses = detectBusesInDirection(lineNum, stops, arrivalMap, 'all');
 
-    // Process each direction
-    const outboundBuses = detectBusesInDirection(lineNum, outboundStops, arrivalMap, 'outbound');
-    const returnBuses = detectBusesInDirection(lineNum, returnStops, arrivalMap, 'return');
+    console.log(`[Estimator] Found ${allBuses.length} buses for line ${lineNum}`);
 
-    buses.push(...outboundBuses, ...returnBuses);
+    buses.push(...allBuses);
 
     return buses;
 }
@@ -58,7 +56,7 @@ function detectBusesInDirection(
     const stopsWithEta: Array<{ stop: Stop; eta: number; index: number }> = [];
     for (let i = 0; i < stops.length; i++) {
         const arrival = arrivalMap.get(stops[i].paradaId);
-        if (arrival?.etaMinutes !== null && arrival.etaMinutes !== undefined) {
+        if (arrival && arrival.etaMinutes !== null && arrival.etaMinutes !== undefined) {
             stopsWithEta.push({ stop: stops[i], eta: arrival.etaMinutes, index: i });
         }
     }

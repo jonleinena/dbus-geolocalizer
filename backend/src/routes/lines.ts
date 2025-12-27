@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { BUS_LINES, getLineByNum, getMapIdForLine, fetchStops, fetchAllArrivals } from '../services/dbus.js';
-import { getNonce } from '../services/scraper.js';
+import { BUS_LINES, getLineByNum, fetchStops, fetchAllArrivals } from '../services/dbus.js';
+import { getLineData } from '../services/scraper.js';
 import { estimateBusPositions } from '../services/estimator.js';
 import type { LinesResponse, StopsResponse, BusesResponse } from '../types.js';
 
@@ -24,13 +24,15 @@ router.get('/', (_req, res) => {
 router.get('/:lineNum/stops', async (req, res) => {
   try {
     const { lineNum } = req.params;
-    const mapId = getMapIdForLine(lineNum);
+    const line = getLineByNum(lineNum);
     
-    if (!mapId) {
+    if (!line) {
       res.status(404).json({ error: `Line ${lineNum} not found` });
       return;
     }
     
+    // Scrape mapId dynamically from line page
+    const { mapId } = await getLineData(line.slug);
     const stops = await fetchStops(mapId);
     
     const response: StopsResponse = {
@@ -59,8 +61,21 @@ router.get('/:lineNum/buses', async (req, res) => {
       return;
     }
     
-    // Fetch stops
-    const stops = await fetchStops(line.mapId);
+    // Scrape nonce AND mapId from line page
+    let nonce: string;
+    let mapId: number;
+    try {
+      const data = await getLineData(line.slug);
+      nonce = data.nonce;
+      mapId = data.mapId;
+    } catch (error) {
+      console.error('Error fetching line data:', error);
+      res.status(500).json({ error: 'Could not fetch real-time data' });
+      return;
+    }
+    
+    // Fetch stops using dynamic mapId
+    const stops = await fetchStops(mapId);
     
     if (stops.length === 0) {
       res.json({
@@ -68,23 +83,6 @@ router.get('/:lineNum/buses', async (req, res) => {
         buses: [],
         stops: [],
         lastUpdated: new Date().toISOString(),
-      });
-      return;
-    }
-    
-    // Get nonce for API calls
-    let nonce: string;
-    try {
-      nonce = await getNonce(line.slug);
-    } catch (error) {
-      console.error('Error fetching nonce:', error);
-      // Return stops without bus positions if nonce fails
-      res.json({
-        lineNum,
-        buses: [],
-        stops,
-        lastUpdated: new Date().toISOString(),
-        error: 'Could not fetch real-time data',
       });
       return;
     }
