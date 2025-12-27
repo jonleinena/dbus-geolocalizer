@@ -149,7 +149,9 @@ export async function fetchArrival(
   // Parse ETA from response HTML
   // The response contains lines like: 'Linea 33:  "Berio-Igara": 10 min.'
   // Note: Uses "Linea" without accent and has double-space before quotes
-  const lineRegex = new RegExp(`Linea\\s+${lineNum}:\\s+"([^"]+)":\\s*(\\d+)\\s*min`, 'gi');
+  // IMPORTANT: Strip leading zeros - API returns "Linea 5" not "Linea 05"
+  const lineNumNormalized = lineNum.replace(/^0+/, '') || lineNum;
+  const lineRegex = new RegExp(`Linea\\s+${lineNumNormalized}:\\s+"([^"]+)":\\s*(\\d+)\\s*min`, 'gi');
   const matches = [...html.matchAll(lineRegex)];
   
   // Get the first match for this specific line
