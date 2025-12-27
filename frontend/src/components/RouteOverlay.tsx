@@ -4,15 +4,19 @@ import type { Stop, BusPosition } from '../types';
 interface RouteOverlayProps {
   stops: Stop[];
   selectedBus: BusPosition | null;
+  routeGeometry?: [number, number][]; // [lng, lat] from OSRM
 }
 
-export function RouteOverlay({ stops, selectedBus }: RouteOverlayProps) {
+export function RouteOverlay({ stops, selectedBus, routeGeometry }: RouteOverlayProps) {
   if (!selectedBus || stops.length === 0) {
     return null;
   }
 
-  // Create route polyline from stops
-  const routePositions = stops.map(s => [s.lat, s.lng] as [number, number]);
+  // Use OSRM route geometry if available, otherwise fall back to stop coordinates
+  // Note: OSRM returns [lng, lat] but Leaflet needs [lat, lng]
+  const routePositions: [number, number][] = routeGeometry 
+    ? routeGeometry.map(([lng, lat]) => [lat, lng])
+    : stops.map(s => [s.lat, s.lng]);
 
   // Get ETAs for this bus
   const etaMap = new Map<string, number | null>();

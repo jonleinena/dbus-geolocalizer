@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { BUS_LINES, getLineByNum, fetchStops, fetchAllArrivals } from '../services/dbus.js';
 import { getLineData } from '../services/scraper.js';
 import { estimateBusPositions } from '../services/estimator.js';
+import { fetchRouteGeometry } from '../services/routing.js';
 import type { LinesResponse, StopsResponse, BusesResponse } from '../types.js';
 
 const router = Router();
@@ -87,8 +88,11 @@ router.get('/:lineNum/buses', async (req, res) => {
       return;
     }
     
-    // Fetch arrivals for all stops
-    const arrivals = await fetchAllArrivals(lineNum, stops, nonce);
+    // Fetch arrivals for all stops and route geometry in parallel
+    const [arrivals, routeGeometry] = await Promise.all([
+      fetchAllArrivals(lineNum, stops, nonce),
+      fetchRouteGeometry(lineNum, stops),
+    ]);
     
     // Estimate bus positions
     const buses = estimateBusPositions(lineNum, stops, arrivals);
@@ -97,6 +101,7 @@ router.get('/:lineNum/buses', async (req, res) => {
       lineNum,
       buses,
       stops,
+      routeGeometry,
       lastUpdated: new Date().toISOString(),
     };
     

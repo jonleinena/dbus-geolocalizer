@@ -6,6 +6,7 @@ import { RouteOverlay } from './RouteOverlay';
 interface MapProps {
   buses: BusPosition[];
   stops: Stop[];
+  routeGeometry?: [number, number][];
   selectedBusId: string | null;
   onSelectBus: (busId: string | null) => void;
 }
@@ -14,7 +15,7 @@ interface MapProps {
 const DEFAULT_CENTER: [number, number] = [43.3183, -1.9812];
 const DEFAULT_ZOOM = 13;
 
-export function Map({ buses, stops, selectedBusId, onSelectBus }: MapProps) {
+export function Map({ buses, stops, routeGeometry, selectedBusId, onSelectBus }: MapProps) {
   const selectedBus = buses.find(b => b.id === selectedBusId) || null;
 
   return (
@@ -31,7 +32,7 @@ export function Map({ buses, stops, selectedBusId, onSelectBus }: MapProps) {
       <ZoomControl position="bottomright" />
 
       {/* Route overlay (shown when bus is selected) */}
-      <RouteOverlay stops={stops} selectedBus={selectedBus} />
+      <RouteOverlay stops={stops} selectedBus={selectedBus} routeGeometry={routeGeometry} />
 
       {/* Bus markers */}
       {buses.map(bus => (

@@ -18,6 +18,7 @@ function App() {
 
   const buses = busData?.buses || [];
   const stops = busData?.stops || [];
+  const routeGeometry = busData?.routeGeometry;
   const lastUpdated = busData?.lastUpdated;
 
   return (
@@ -37,6 +38,7 @@ function App() {
         <Map
           buses={buses}
           stops={stops}
+          routeGeometry={routeGeometry}
           selectedBusId={selectedBusId}
           onSelectBus={setSelectedBusId}
         />

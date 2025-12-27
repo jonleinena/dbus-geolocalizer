@@ -65,6 +65,7 @@ export interface BusesResponse {
   lineNum: string;
   buses: BusPosition[];
   stops: Stop[];
+  routeGeometry?: [number, number][]; // [lng, lat] coordinates following actual roads
   lastUpdated: string;
 }
 

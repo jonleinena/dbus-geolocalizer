@@ -81,6 +81,31 @@ npm run dev
 | `GET /api/lines/:lineNum/stops` | Get stops for a line |
 | `GET /api/lines/:lineNum/buses` | Get estimated bus positions |
 
+## Deployment (Railway)
+
+The app is configured as a single-service deployment where the backend serves the frontend.
+
+### One-Click Deploy
+
+1. Push your code to GitHub
+2. Go to [Railway](https://railway.app) and create a new project
+3. Connect your GitHub repo
+4. Railway will automatically detect the `package.json` and run:
+   - `npm run build` (builds both frontend and backend)
+   - `npm start` (starts the backend serving the frontend)
+5. Done! Railway provides a public URL automatically.
+
+### Manual Deploy via CLI
+
+```bash
+npm i -g @railway/cli
+railway login
+railway init
+railway up
+```
+
+**No port configuration needed** - Railway automatically sets the `PORT` environment variable.
+
 ## Disclaimer
 
 This is an unofficial project. Bus positions are **estimated** based on arrival times and may not reflect actual real-time GPS positions. Use for informational purposes only.
